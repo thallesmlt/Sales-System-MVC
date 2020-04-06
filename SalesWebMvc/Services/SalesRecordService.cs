@@ -1,0 +1,43 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using SalesWebMvc.Models;
+using Microsoft.EntityFrameworkCore;
+
+
+namespace SalesWebMvc.Services
+{
+    public class SalesRecordService
+    {
+        private readonly Data.SalesWebMvcContext _context;
+        public SalesRecordService(Data.SalesWebMvcContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<List<Departament>> FindAllAsync()
+        {
+            return await _context.Departament.OrderBy(x => x.Name).ToListAsync();
+        }
+
+        public async Task<List<SalesRecord>> FindByDateAsync(DateTime? minDate, DateTime? maxDate)
+        {
+            var result = from obj in _context.SalesRecords select obj;
+            if (minDate.HasValue)
+            {
+                result = result.Where(x => x.Date >= minDate.Value);
+            }
+            if (maxDate.HasValue)
+            {
+                result = result.Where(x => x.Date <= maxDate.Value);
+            }
+            return await result
+                .Include(x => x.Seller)
+                .Include(x => x.Seller.Departament)
+                .OrderByDescending(x => x.Date)
+                .ToListAsync();
+        }
+
+    }
+}
